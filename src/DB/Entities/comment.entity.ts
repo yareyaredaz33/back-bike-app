@@ -3,7 +3,7 @@ import {
   Column,
   PrimaryGeneratedColumn,
   ManyToOne,
-  CreateDateColumn,
+  CreateDateColumn, UpdateDateColumn,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 @Entity()
@@ -21,5 +21,8 @@ export class CommentEntity {
   user: UserEntity;
 
   @CreateDateColumn({ type: 'varchar', nullable: true })
-  createdat: string;
+  createdAt: string;
+
+  @UpdateDateColumn({ type: 'varchar', nullable: true })
+  updatedAt: string;
 }
