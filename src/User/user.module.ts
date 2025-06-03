@@ -34,6 +34,6 @@ import { ChatEntity } from '../DB/Entities/chat.entity';
   ],
   controllers: [UserController],
   providers: [UserService, UserModel, FileService],
-  exports: [UserService, UserModel],
+  exports: [UserService, UserModel,FileService],
 })
 export class UserModule {}

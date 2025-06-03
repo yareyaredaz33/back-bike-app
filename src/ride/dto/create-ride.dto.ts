@@ -4,4 +4,8 @@ export class CreateRideDto {
   usersCount: number;
   roadId: string;
   date: string;
+  isPaid: boolean;
+  price: number;
+  distance: number;
+  duration: number;
 }

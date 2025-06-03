@@ -36,7 +36,13 @@ export class UserService {
   async createUser(user: UserInputModel): Promise<UserEntity> {
     const passwordSalt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(user.password, passwordSalt);
-
+    if (user.role === 'trainer') {
+      user.role = 'user'; // Start as regular user
+      user.isPendingTrainerApproval = true; // Mark as pending approval
+      user.trainerRequestDate = new Date(); // Record request timestamp
+    } else {
+      user.role = user.role || 'user';
+    }
     const newUser = this.userRepository.create({
       ...user,
       password_salt: passwordSalt,

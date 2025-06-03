@@ -11,6 +11,8 @@ import { UserSettingsEntity } from './user.settings.entity';
 import { RoadEntity } from './road.entity';
 import { ArticleEntity } from './article.entity';
 import { CommentEntity } from './comment.entity';
+import { Payment } from './Payment';
+import { UserEntityRide } from './user.entity.ride';
 
 @Entity()
 export class UserEntity {
@@ -37,13 +39,16 @@ export class UserEntity {
 
   @Column({ type: 'int', nullable: true })
   age: number;
+  @Column({ type: 'varchar', nullable: true })
+  role: string;
 
   @Column({ type: 'varchar', nullable: true })
   city: string;
 
   @Column({ type: 'varchar', nullable: true })
   avatar: string;
-
+  @Column({ nullable: true })
+  qualificationDocumentUrl: string;
   @CreateDateColumn({ type: 'varchar', nullable: true })
   createdat: string;
 
@@ -61,6 +66,9 @@ export class UserEntity {
 
   @OneToMany(() => ArticleEntity, (article) => article.user)
   articles: ArticleEntity[];
+
+  @OneToMany(() => Payment, (payment) => payment.user)
+  payments: Payment[];
 
   @OneToMany(() => CommentEntity, (comment) => comment.user)
   comments: CommentEntity[];
