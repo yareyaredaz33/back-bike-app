@@ -44,7 +44,6 @@ export class RoadService {
   }
 
   async findOne(id: string) {
-    console.log(id);
     const result = await this.roadEntityRepository.findOne({ where: { id } });
     if (!result) return null;
     return {

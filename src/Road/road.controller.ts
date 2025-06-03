@@ -46,7 +46,6 @@ export class RoadController {
   @Delete(':id')
   remove(@Param('id') id: string, @Res() response: Response) {
     const result = this.roadService.remove(id);
-    console.log(id);
     if (result) response.sendStatus(204);
     else response.sendStatus(404);
   }
