@@ -25,6 +25,19 @@ import { ArticlesModule } from './articles/articles.module';
 import { ArticleEntity } from './DB/Entities/article.entity';
 import { CommentsModule } from './comments/comments.module';
 import { CommentEntity } from './DB/Entities/comment.entity';
+import { Payment } from './DB/Entities/Payment';
+import { PaymentsModule } from './Stripe/payments.module';
+import { AchievementEntity, UserAchievementEntity } from './DB/Entities/achivement.entity';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AchievementModule } from './achievment/achievement.module';
+import { LevelModule } from './level/level';
+import { MonthlyGoalEntity, MonthlyStatsEntity, UserLevelEntity } from './DB/Entities/level.entity';
+import { AdminModule } from './Admin/admin.module';
+import { RideApplicationEntity } from './DB/Entities/ride-application.entity';
+import { ReportEntity } from './DB/Entities/report.entity';
+import { UserBanEntity } from './DB/Entities/user-ban.entity';
+import { ReportsModule } from './reports/reports.module';
+import { GuardsModule } from './Auth/Guards/guards.module';
 
 @Module({
   imports: [
@@ -34,6 +47,7 @@ import { CommentEntity } from './DB/Entities/comment.entity';
     RoadModule,
     ChatModule,
     NotificationsModule,
+    PaymentsModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -59,10 +73,20 @@ import { CommentEntity } from './DB/Entities/comment.entity';
           ArticleEntity,
           CommentEntity,
           ChatEntity,
+          Payment,
+          AchievementEntity,
+          UserAchievementEntity,
+          UserLevelEntity,
+          MonthlyGoalEntity,
+          MonthlyStatsEntity,
+RideApplicationEntity,
+          ReportEntity,
+          UserBanEntity,
         ],
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     RoadModule,
     ChatModule,
     RideModule,
