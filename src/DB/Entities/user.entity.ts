@@ -52,6 +52,7 @@ export class UserEntity {
   @CreateDateColumn({ type: 'varchar', nullable: true })
   createdat: string;
 
+
   @OneToMany(() => UserRoleEntity, (role) => role.user)
   roles: UserRoleEntity[];
 
@@ -63,7 +64,7 @@ export class UserEntity {
 
   @OneToMany(() => UserSettingsEntity, (role) => role.user)
   settings: UserSettingsEntity[];
-
+  x
   @OneToMany(() => ArticleEntity, (article) => article.user)
   articles: ArticleEntity[];
 
@@ -72,4 +73,15 @@ export class UserEntity {
 
   @OneToMany(() => CommentEntity, (comment) => comment.user)
   comments: CommentEntity[];
+  @Column({ default: false })
+  isPendingTrainerApproval: boolean;
+
+  // Timestamp for when approval request was submitted
+  @Column({ nullable: true, type: 'timestamp' })
+  trainerRequestDate: Date;
+  @Column({ default: false })
+  isApproved: boolean;
+  // You might want to add notes from the admin about approval/rejection
+  @Column({ nullable: true })
+  approvalNotes: string;
 }

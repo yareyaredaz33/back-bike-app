@@ -54,7 +54,7 @@ export class UserService {
 
   async getUserById(id: string, userId?): Promise<UserProfileView> {
     let subscription;
-    if (userId && id !== userId) {
+    if (userId && id &&  id !== userId) {
       subscription = await this.subscriptionsRepository.findOne({
         where: { user_id: userId, celebrity_id: id },
       });
@@ -132,5 +132,81 @@ export class UserService {
       })
       .execute();
     return result;
+  }
+  async getPendingTrainerApprovals(): Promise<UserEntity[]> {
+    return this.userRepository.find({
+      // @ts-ignore
+      where: { isPendingTrainerApproval: true, isApproved: false },
+    });
+  }
+
+  // Approve trainer request
+  async approveTrainer(userId: number, notes?: string): Promise<UserEntity> {
+    const user = await this.userRepository.findOne({
+      // @ts-ignore
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    user.isPendingTrainerApproval = false;
+    // @ts-ignore
+    user.isApproved = true;
+    user.role = 'trainer';
+    if (notes) {
+      user.approvalNotes = notes;
+    }
+
+    return this.userRepository.save(user);
+  }
+
+  // Reject trainer request
+  async rejectTrainer(userId: number, notes?: string): Promise<UserEntity> {
+    const user = await this.userRepository.findOne({
+      // @ts-ignore
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    user.isPendingTrainerApproval = false;
+    // @ts-ignore
+    user.isApproved = false;
+    // Keep role as 'user'
+    if (notes) {
+      user.approvalNotes = notes;
+    }
+
+    return this.userRepository.save(user);
+  }
+
+  // Get user approval status
+  async getUserApprovalStatus(userId: number): Promise<{
+    isPendingApproval: boolean;
+    isApproved: boolean;
+    role: string;
+    notes?: string;
+  }> {
+    const user = await this.userRepository.findOne({
+      // @ts-ignore
+      where: { id: userId },
+    });
+    console.log(userId);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+    console.log(user);
+    return {
+      isPendingApproval: user.isPendingTrainerApproval,
+      // @ts-ignore
+      isApproved: user.isApproved,
+      role: user.role,
+      notes: user.approvalNotes,
+    };
   }
 }

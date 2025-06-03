@@ -11,4 +11,8 @@ export class UserInputModel {
   // @IsNotEmpty()
   //@Length(6, 20)
   password: string;
+  role: string;
+  qualificationDocumentUrl?: string;
+  isPendingTrainerApproval?: boolean;
+  trainerRequestDate?: Date;
 }

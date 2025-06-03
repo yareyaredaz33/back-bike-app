@@ -13,7 +13,7 @@ import {
   UseGuards,
   Req,
   Delete,
-  Query,
+  Query, NotFoundException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -26,7 +26,17 @@ export class UserController {
     private readonly userService: UserService,
     private readonly fileService: FileService,
   ) {}
-
+  @Get('approval-status')
+  @UseGuards(JwtAuthGuard)
+  async getApprovalStatus(@Req() request) {
+    const userId = request.user.userInfo.id;
+    try {
+      const status = await this.userService.getUserApprovalStatus(userId);
+      return status;
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
+  }
   @Get('/me')
   @UseGuards(JwtAuthGuard)
   async getProfile(@Req() request, @Res() res: Response) {
@@ -103,7 +113,6 @@ export class UserController {
   ) {
     const user = await this.userService.getUserById(params.id);
 
-    console.log('hello');
     if (!user) {
       response.sendStatus(404);
     }
@@ -120,7 +129,6 @@ export class UserController {
     @Req() request,
   ) {
     try {
-      console.log(file);
       const result = await this.fileService.uploadFile(file);
       this.userService.saveImage(request.user.userInfo.id, result.url);
       return res.json({
@@ -128,7 +136,6 @@ export class UserController {
         url: result.url,
       });
     } catch (error) {
-      console.log(error);
     }
   }
 
@@ -160,4 +167,6 @@ export class UserController {
     result.affected > 0 ? res.sendStatus(204) : res.sendStatus(400);
     return;
   }
+
+
 }
