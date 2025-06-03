@@ -32,7 +32,48 @@ export class AchievementService {
         threshold: 1,
         icon: 'https://www.svgrepo.com/show/35275/number-one.svg',
       },
-
+      {
+        title: 'Десять поїздок',
+        description: 'Ви успішно здійснили десять поїздок!',
+        type: 'RIDE_COUNT',
+        threshold: 10,
+        icon: 'https://media.gettyimages.com/id/1459004414/vector/x10-ten-times-icon-with-reflection-on-white-background.jpg?s=1024x1024&w=gi&k=20&c=hIBjoz1ddCMpx3IJTjiYmM8YRoMtIJtxE_rjHTxvw6U=',
+      },
+      {
+        title: '10 км',
+        description: 'Ви проїхали 10 кілометрів!',
+        type: 'DISTANCE',
+        threshold: 10000, // 10 km in meters
+        icon: 'https://www.iconpacks.net/icons/4/free-number-ten-icon-13274-thumb.png',
+      },
+      {
+        title: '100 км',
+        description: 'Ви проїхали 100 кілометрів!',
+        type: 'DISTANCE',
+        threshold: 100000, // 100 km in meters
+        icon: 'https://www.freeiconspng.com/uploads/poker-chip-100-icon-27.png',
+      },
+      {
+        title: '500 км',
+        description: 'Ви проїхали 500 кілометрів!',
+        type: 'DISTANCE',
+        threshold: 500000, // 500 km in meters
+        icon: 'https://cdn-icons-png.flaticon.com/512/28/28287.png',
+      },
+      {
+        title: '10000 км',
+        description: 'Ви проїхали 10000 кілометрів!',
+        type: 'DISTANCE',
+        threshold: 10000000, // 500 km in meters
+        icon: 'https://img.freepik.com/premium-vector/smart-watch-showing-10000-steps-icon-simple-style_98396-143488.jpg?w=360',
+      },
+      {
+        title: 'Марафонець',
+        description: 'Ви проїхали більше 10 годин!',
+        type: 'DURATION',
+        threshold: 600 * 60, // 10 hours in minutes
+        icon: 'https://media.istockphoto.com/id/1073746226/vector/runner-icon.jpg?s=612x612&w=0&k=20&c=55aJZ6lK8NzY1V6wjuSRLOdVOK3tdnQyIXWz60k_vhY=',
+      },
     ];
 
     await this.achievementRepository.save(defaultAchievements);
