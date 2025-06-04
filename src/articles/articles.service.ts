@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ArticleEntity } from '../DB/Entities/article.entity';
 import { Repository } from 'typeorm';
+import { ArticleEntity } from '../DB/Entities/article.entity';
+import { UserBanEntity } from '../DB/Entities/user-ban.entity';
 
 @Injectable()
 export class ArticlesService {
@@ -22,48 +23,118 @@ export class ArticlesService {
       ...createArticleDto,
       user_id: userId,
       created_at: new Date().toISOString(),
-      views: 3,
+      views: 0,
       user: userId,
     });
-    this.articleRepository.save(article);
-    return article;
-  }
 
-  findAll(sort, order, query) {
-    console.log(sort, order, query);
+    const savedArticle = await this.articleRepository.save(article);
+
     return this.articleRepository
       .createQueryBuilder('article')
-      .where('article.title ILIKE :searchTerm', {
-        searchTerm: `%${query}%`,
-      })
-      .orderBy(`article.${sort}`, order === 'asc' ? 'ASC' : 'DESC')
-      .leftJoinAndSelect('article.user', 'user')
-      .getMany();
-  }
-
-  findOne(id: string) {
-    return this.articleRepository
-      .createQueryBuilder('article')
-      .where({ id })
+      // @ts-ignore
+      .where('article.id = :id', { id: savedArticle.id || savedArticle[0].id })
       .leftJoinAndSelect('article.user', 'user')
       .getOne();
   }
 
-  update(id: number, updateArticleDto: UpdateArticleDto) {
-    return `This action updates a #${id} article`;
+  async findAll(sort: string, order: string, query: string) {
+    const queryBuilder = this.articleRepository
+      .createQueryBuilder('article')
+      .leftJoinAndSelect('article.user', 'user');
+
+    if (query) {
+      queryBuilder.where('article.title ILIKE :searchTerm', {
+        searchTerm: `%${query}%`,
+      });
+    }
+
+    if (sort) {
+      queryBuilder.orderBy(
+        `article.${sort}`,
+        order === 'asc' ? 'ASC' : 'DESC'
+      );
+    }
+
+    return queryBuilder.getMany();
   }
 
-  remove(id: string) {
-    console.log(id);
-    return this.articleRepository.delete({ id });
+  async findOne(id: string) {
+    const article = await this.articleRepository
+      .createQueryBuilder('article')
+      .where({ id })
+      .leftJoinAndSelect('article.user', 'user')
+      .getOne();
+
+    if (!article) {
+      throw new NotFoundException(`Стаття з ID ${id} не знайдена`);
+    }
+
+    return article;
   }
 
-  saveImage(id: any, url: string) {
-    const result = this.articleRepository.update({ id }, { img: url });
+  async update(id: number, updateArticleDto: UpdateArticleDto, userId?: string) {
+    const article = await this.findOne(id.toString());
+
+    if (userId && article.user.id !== userId) {
+      throw new ForbiddenException('Ви можете редагувати тільки свої статті');
+    }
+
+    await this.articleRepository.update(id, {
+      ...updateArticleDto,
+    });
+
+    return this.findOne(id.toString());
+  }
+
+  async remove(id: string, userId?: string) {
+    const article = await this.findOne(id);
+
+    if (userId && article.user.id !== userId) {
+      throw new ForbiddenException('Ви можете видаляти тільки свої статті');
+    }
+
+    await this.articleRepository.delete({ id });
+    return { message: `Стаття з ID ${id} успішно видалена` };
+  }
+
+  async adminRemove(id: string) {
+    const article = await this.findOne(id);
+    await this.articleRepository.delete({ id });
+    return { message: `Стаття з ID ${id} успішно видалена адміністратором` };
+  }
+
+  async saveImage(id: any, url: string) {
+    const result = await this.articleRepository.update({ id }, { img: url });
     return result;
   }
 
-  findAllForUser(id: string) {
-    return this.articleRepository.find({ where: { user_id: id } });
+  async findAllForUser(id: string) {
+    return this.articleRepository
+      .createQueryBuilder('article')
+      .where('article.user_id = :id', { id })
+      .leftJoinAndSelect('article.user', 'user')
+      .orderBy('article.created_at', 'DESC')
+      .getMany();
+  }
+
+  private async checkUserBan(userId: string) {
+    const ban = await this.userBanRepository.findOne({
+      where: {
+        userId,
+        isActive: true
+      }
+    });
+
+    if (!ban) {
+      return;
+    }
+
+    if (ban.expiresAt && new Date() > ban.expiresAt) {
+      ban.isActive = false;
+      await this.userBanRepository.save(ban);
+      return;
+    }
+
+    throw new ForbiddenException(`Ви забанені до ${ban.expiresAt.toLocaleDateString()}. Причина: ${ban.reason}`);
   }
 }
