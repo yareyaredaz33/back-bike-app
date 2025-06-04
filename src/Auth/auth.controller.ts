@@ -4,8 +4,8 @@ import {
   Get,
   Post,
   Req,
-  Res,
-  UseGuards,
+  Res, UploadedFile,
+  UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
@@ -13,29 +13,101 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { UserInputModel } from './DTO/user.input.model';
 import { UserService } from '../User/user.service';
 import { JwtAuthGuard } from './Guards/jwt.auth.guards';
+import { FileService } from '../User/file.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
+const storage = diskStorage({
+  destination: './uploads',
+  filename: (req, file, cb) => {
+    const randomName = Array(32)
+      .fill(null)
+      .map(() => Math.round(Math.random() * 16).toString(16))
+      .join('');
+    return cb(null, `${randomName}${extname(file.originalname)}`);
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+
+  cb(null, true);
+};
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UserService,
+    private readonly fileService: FileService,
   ) {}
   @UseGuards(ThrottlerGuard)
   @Post('registration')
+  @UseInterceptors(
+    FileInterceptor('qualificationDocument', {
+      storage: storage,
+      fileFilter: fileFilter
+    })
+  )
   async registration(
     @Body() userModel: UserInputModel,
+    @UploadedFile() file: Express.Multer.File,
     @Res() response: Response,
   ) {
-    const isUserExists = await this.userService.getUserByUsernameOrEmail({
-      username: userModel.username,
-      email: userModel.email,
-    });
-    if (isUserExists) {
-      response.sendStatus(400);
-      return;
+    try {
+      const isUserExists = await this.userService.getUserByUsernameOrEmail({
+        username: userModel.username,
+        email: userModel.email,
+      });
+
+      if (isUserExists) {
+        response.status(400).json({
+          message: 'User with this username or email already exists',
+          field: isUserExists.username === userModel.username ? 'username' : 'email',
+        });
+        return;
+      }
+
+      // Handle file upload if trainer role is requested and file exists
+      let qualificationDocUrl = null;
+      if (userModel.role === 'trainer') {
+        if (!file) {
+          response.status(400).json({ message: 'Qualification document is required for trainer requests' });
+          return;
+        }
+
+        try {
+          const uploadResult = await this.fileService.uploadFile(file);
+          qualificationDocUrl = uploadResult.url;
+        } catch (error) {
+          console.error('Error uploading file:', error);
+          response.status(500).json({ message: 'Error uploading qualification document' });
+          return;
+        }
+      }
+
+      // Create user with qualification document URL
+      const userData = {
+        ...userModel,
+        qualificationDocumentUrl: qualificationDocUrl,
+      };
+
+      const user = await this.userService.createUser(userData);
+      console.log("user", user);
+      // Send appropriate response based on role request
+      if (userModel.role === 'trainer') {
+        response.status(200).json({
+          message: 'Registration successful. Your trainer request is pending approval.',
+          isPendingApproval: true
+        });
+        return
+      } else {
+        response.sendStatus(200);
+        return
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      response.status(500).json({ message: 'Registration failed', error: error.message });
     }
-    await this.userService.createUser(userModel);
-    response.sendStatus(204);
   }
 
   @UseGuards(ThrottlerGuard)
@@ -167,8 +239,6 @@ export class AuthController {
 
   @Post('refresh-token')
   async refreshToken(@Req() req, @Res() response: Response) {
-    console.log('ref');
-    console.log(req.cookies);
     try {
       const { refreshToken } = req.cookies;
       let tokens;
@@ -179,7 +249,6 @@ export class AuthController {
           req.ip,
         );
       }
-      console.log('zdarova', tokens);
       if (tokens) {
         response.cookie('refreshToken', tokens.refreshToken, {
           secure: true,
@@ -188,7 +257,6 @@ export class AuthController {
         return response.status(200).json({ accessToken: tokens.accessToken });
       }
     } catch (e) {
-      console.log(e);
       response.sendStatus(401);
     }
   }

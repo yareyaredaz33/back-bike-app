@@ -15,6 +15,11 @@ import { UserModel } from '../User/Model/user.model';
 import { SubscriptionsEntity } from '../DB/Entities/subscriptionsEntity';
 import { NotificationsEntity } from '../DB/Entities/notifications.entity';
 import { ChatEntity } from '../DB/Entities/chat.entity';
+import { UserModule } from '../User/user.module';
+import { FileService } from '../User/file.service';
+import { MulterModule } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @Module({
   imports: [
@@ -26,6 +31,25 @@ import { ChatEntity } from '../DB/Entities/chat.entity';
         },
       ],
     }),
+    MulterModule.register({
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const randomName = Array(32)
+            .fill(null)
+            .map(() => Math.round(Math.random() * 16).toString(16))
+            .join('');
+          return cb(null, `${randomName}${extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+          return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
+      },
+    }),
+    UserModule,
     TypeOrmModule.forFeature([
       UserEntity,
       UserRoleEntity,
@@ -52,6 +76,7 @@ import { ChatEntity } from '../DB/Entities/chat.entity';
     UserService,
     JwtStrategy,
     UserModel,
+    FileService,
   ],
   exports: [AuthService, UserService],
 })
