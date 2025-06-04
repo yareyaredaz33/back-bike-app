@@ -32,7 +32,7 @@ export class AuthService {
   // }
 
   async login(user: any) {
-    const payload = { username: user.username, sub: user.userId };
+    const payload = { username: user.username, sub: user.userId, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
     };
@@ -58,6 +58,7 @@ export class AuthService {
         user: user.id,
         email: user.email,
         username: user.username,
+        role: user.role,
       },
       { secret: this.configService.get('SECRET') },
     );
@@ -133,7 +134,6 @@ export class AuthService {
     const tokenFromDb = await this.sessionRepository.findOne({
       where: { refresh_token: refreshToken },
     });
-    console.log(userData, tokenFromDb);
     if (!userData || !tokenFromDb) {
       throw new Error();
     }
@@ -145,7 +145,6 @@ export class AuthService {
     return { ...tokens };
   }
   async validateRefreshToken(refreshToken: string) {
-    console.log(refreshToken);
     try {
       const { user, deviceId } = await this.jwtService.verifyAsync(
         refreshToken,
@@ -156,7 +155,6 @@ export class AuthService {
         deviceId,
       };
     } catch (e) {
-      console.log(e);
       return null;
     }
   }

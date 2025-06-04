@@ -12,13 +12,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const status = exception.getStatus();
-    switch (status) {
+    switch (status) {ddddd
       case 400:
         const errorResponse = {
           errorsMessages: [],
         };
         const responseBody: any = exception.getResponse();
-        console.log(responseBody);
         if (Array.isArray(responseBody.message)) {
           responseBody.message?.forEach((m) =>
             errorResponse.errorsMessages.push(m),
