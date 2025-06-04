@@ -3,9 +3,10 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  CreateDateColumn,
+  CreateDateColumn, OneToMany,
 } from 'typeorm';
 import { RoadEntity } from './road.entity';
+import { UserEntityRide } from './user.entity.ride';
 @Entity()
 export class RideEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -13,6 +14,11 @@ export class RideEntity {
 
   @Column({ type: 'int', nullable: true })
   user_count: number;
+
+  @Column({ type: 'boolean', nullable: true })
+  isPaid: string;
+  @Column({ type: 'int', nullable: true })
+  price: number;
 
   @Column({ type: 'varchar' })
   road_id: string;
@@ -27,7 +33,12 @@ export class RideEntity {
   createdat: string;
   @Column({ type: 'varchar', nullable: true })
   date: string;
-
+  @Column({ type: 'int', nullable: true })
+  duration: number;
+  @Column({ type: 'int', nullable: true })
+  distance: number;
+  @OneToMany(() => UserEntityRide, (userRide) => userRide.ride)
+  participants: UserEntityRide[];
   @ManyToOne(() => RoadEntity, (road) => road.rides, {
     onDelete: 'CASCADE',
   })
