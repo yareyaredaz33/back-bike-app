@@ -10,9 +10,13 @@ export class ArticlesService {
   constructor(
     @InjectRepository(ArticleEntity)
     private articleRepository: Repository<ArticleEntity>,
+    @InjectRepository(UserBanEntity)
+    private userBanRepository: Repository<UserBanEntity>,
   ) {}
 
-  create(createArticleDto: CreateArticleDto, userId: string) {
+  async create(createArticleDto: CreateArticleDto, userId: string) {
+    await this.checkUserBan(userId);
+
     // @ts-ignore
     const article = this.articleRepository.create({
       ...createArticleDto,
