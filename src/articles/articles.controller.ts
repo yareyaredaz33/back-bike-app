@@ -60,8 +60,13 @@ export class ArticlesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateArticleDto: UpdateArticleDto) {
-    return this.articlesService.update(+id, updateArticleDto);
+  @UseGuards(JwtAuthGuard)
+  update(
+    @Param('id') id: string,
+    @Body() updateArticleDto: UpdateArticleDto,
+    @Req() req
+  ) {
+    return this.articlesService.update(+id, updateArticleDto, req.user.userInfo.id);
   }
 
   @Delete(':id')
@@ -70,6 +75,11 @@ export class ArticlesController {
   }
 
   @UseGuards(JwtAuthGuard)
+  remove(@Param('id') id: string, @Req() req) {
+    return this.articlesService.remove(id, req.user.userInfo.id);
+  }
+
+  @UseGuards(JwtAuthGuard, BannedUserGuard)
   @Post('upload-photo')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
@@ -87,5 +97,22 @@ export class ArticlesController {
     } catch (error) {
       console.log(error);
     }
+  }
+}
+
+@Controller('admin/articles')
+export class AdminArticlesController {
+  constructor(private readonly articlesService: ArticlesService) {}
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  adminRemove(@Param('id') id: string) {
+    return this.articlesService.adminRemove(id);
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  findAllForAdmin(@Query('_sort') sort, @Query('_order') order, @Query('q') q) {
+    return this.articlesService.findAll(sort, order, q);
   }
 }

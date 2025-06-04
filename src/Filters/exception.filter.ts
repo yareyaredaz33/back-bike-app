@@ -12,7 +12,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const status = exception.getStatus();
-    switch (status) {ddddd
+    switch (status) {
       case 400:
         const errorResponse = {
           errorsMessages: [],

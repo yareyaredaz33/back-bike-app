@@ -10,6 +10,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { FileService } from '../User/file.service';
 import { ArticleEntity } from '../DB/Entities/article.entity';
+import { UserBanEntity } from '../DB/Entities/user-ban.entity';
 
 @Module({
   controllers: [ArticlesController],
@@ -19,6 +20,7 @@ import { ArticleEntity } from '../DB/Entities/article.entity';
       NotificationsEntity,
       SubscriptionsEntity,
       ArticleEntity,
+      UserBanEntity
     ]),
     MulterModule.register({
       storage: diskStorage({
